@@ -1,0 +1,23 @@
+# build artifacts
+build/
+*.o
+*.obj
+*.out
+*.dSYM/
+# compiled benchmark/test binaries (no extension)
+bench
+replay
+bench_mt
+match_bench
+signal_bench
+backtest
+test_book
+test_match
+# latex/aux
+*.aux
+*.log
+# python
+__pycache__/
+*.pyc
+# os
+.DS_Store
