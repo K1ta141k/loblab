@@ -19,6 +19,7 @@ target_link_libraries(bench_mt PRIVATE Threads::Threads)
 add_executable(match_bench src/match_bench.cpp)
 add_executable(signal_bench src/signal_bench.cpp)
 add_executable(backtest src/backtest.cpp)
+add_executable(market_maker src/market_maker.cpp)
 add_executable(test_book tests/test_book.cpp)
 add_executable(test_match tests/test_match.cpp)
 

@@ -107,6 +107,25 @@ filter/tilt. That crux (signal < spread) is the whole game in taker alpha. **Cav
 accuracy reflects this simulator's tight imbalance→price coupling; on live data expect ~55% -
 re-validate before trusting any number here.
 
+## Market making: monetizing the signal as a provider
+```bash
+clang++ -std=c++17 -O3 -march=native -Iinclude src/market_maker.cpp -o market_maker && ./market_maker
+```
+The backtest concluded OBI is a liquidity-*provider* edge, not a taker's. This proves that
+directly. An inventory-aware market maker (Avellaneda-Stoikov style) quotes two-sided around a
+reservation price `r = mid - gamma*inventory + theta*OBI`, with a hard position limit. Fills
+come from the sim's informed + noise flow, so **adverse selection is real** (you sell into a
+rise, buy into a fall). We A/B two makers over the *same* path and fill luck:
+```
+A: inventory only    PnL +384544 t   adverse +65986   avg|inv| 8.3   spread-retention 85.4%
+B: inventory + OBI   PnL +396911 t   adverse +49982   avg|inv| 6.9   spread-retention 88.8%
+```
+Adding the OBI skew lifts PnL **+3.2%**, cuts adverse selection **~24%**, and *lowers* average
+inventory (6.9 vs 8.3): the maker cannot see the fair value driving informed flow, but it can
+see imbalance, so it skews quotes to dodge that flow. The punchline of the whole repo: **the same
+signal that loses money crossing the spread makes money providing it.** (Synthetic flow;
+re-validate on live data.)
+
 ## What's here
 - `include/lob/order_book.hpp` - the optimized book: flat array of price levels
   indexed by tick (O(1) level access), intrusive FIFO doubly-linked list per level
@@ -157,8 +176,11 @@ it halved p50 (84 ns -> 42 ns). More headroom remains in the roadmap.
 8. **[DONE] P&L backtest.** `src/backtest.cpp`: latent-fair-value sim + threshold sweep +
    random-direction control; net taker P&L vs the spread. Finding: OBI is directionally
    right but the move rarely clears the spread (a provider/filter edge, not a taker's).
-   Next: rdtsc/core-pinned timing on x86 Linux for clean tails; micro-price signal;
-   validate on recorded L2 data.
+9. **[DONE] Market maker.** `src/market_maker.cpp`: inventory-aware two-sided quoting
+   (Avellaneda-Stoikov reservation price) with an OBI skew and a position limit, A/B'd
+   signal-off vs signal-on. The OBI skew lifts PnL +3.2% and cuts adverse selection ~24%,
+   confirming the provider edge. Next: rdtsc/core-pinned timing on x86 Linux for clean
+   tails; a maker/queue-position model; validate on recorded L2 data.
 
 ## Note
 Timing here uses `std::chrono::steady_clock` so it builds portably (incl. Apple
